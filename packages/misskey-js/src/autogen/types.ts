@@ -15320,6 +15320,8 @@ export interface operations {
                 'application/json': {
                     /** Format: misskey:id */
                     channelId: string;
+                    /** @default false */
+                    withFiles?: boolean;
                     /** @default 10 */
                     limit?: number;
                     /** Format: misskey:id */

@@ -999,6 +999,9 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 		if (note.channelId) {
 			this.fanoutTimelineService.push(`channelTimeline:${note.channelId}`, note.id, this.config.perChannelMaxNoteCacheCount, r);
+			if (note.fileIds.length > 0) {
+				this.fanoutTimelineService.push(`channelTimelineWithFiles:${note.channelId}`, note.id, this.config.perChannelMaxNoteCacheCount / 2, r);
+			}
 
 			this.fanoutTimelineService.push(`userTimelineWithChannel:${user.id}`, note.id, note.userHost == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
 

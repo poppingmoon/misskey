@@ -44,6 +44,7 @@ export const paramDef = {
 	type: 'object',
 	properties: {
 		channelId: { type: 'string', format: 'misskey:id' },
+		withFiles: { type: 'boolean', default: false },
 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
 		sinceId: { type: 'string', format: 'misskey:id' },
 		untilId: { type: 'string', format: 'misskey:id' },
@@ -88,7 +89,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			if (me) this.activeUsersChart.read(me);
 
 			if (!this.serverSettings.enableFanoutTimeline) {
-				return await this.noteEntityService.packMany(await this.getFromDb({ untilId, sinceId, limit: ps.limit, channelId: channel.id }, me), me);
+				return await this.noteEntityService.packMany(await this.getFromDb({ untilId, sinceId, limit: ps.limit, channelId: channel.id, withFiles: ps.withFiles }, me), me);
 			}
 
 			return await this.fanoutTimelineEndpointService.timeline({
@@ -98,11 +99,11 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				allowPartial: ps.allowPartial,
 				me,
 				useDbFallback: true,
-				redisTimelines: [`channelTimeline:${channel.id}`],
+				redisTimelines: ps.withFiles ? [`channelTimelineWithFiles:${channel.id}`] : [`channelTimeline:${channel.id}`],
 				excludePureRenotes: false,
 				ignoreAuthorChannelFromMute: true,
 				dbFallback: async (untilId, sinceId, limit) => {
-					return await this.getFromDb({ untilId, sinceId, limit, channelId: channel.id }, me);
+					return await this.getFromDb({ untilId, sinceId, limit, channelId: channel.id, withFiles: ps.withFiles }, me);
 				},
 			});
 		});
@@ -113,6 +114,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		sinceId: string | null,
 		limit: number,
 		channelId: string
+		withFiles: boolean,
 	}, me: MiLocalUser | null) {
 		//#region fallback to database
 		const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'), ps.sinceId, ps.untilId)
@@ -134,6 +136,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				query.andWhere('note.channelId NOT IN (:...mutingChannelIds)', { mutingChannelIds });
 				query.andWhere('note.renoteChannelId NOT IN (:...mutingChannelIds)', { mutingChannelIds });
 			}
+		}
+
+		if (ps.withFiles) {
+			query.andWhere('note.fileIds != \'{}\'');
 		}
 		//#endregion
 

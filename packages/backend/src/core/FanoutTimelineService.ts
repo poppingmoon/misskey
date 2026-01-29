@@ -34,6 +34,7 @@ export type FanoutTimelineName = (
 
 	// channel timelines
 	| `channelTimeline:${string}` // replies are included
+	| `channelTimelineWithFiles:${string}` // only notes with files are included
 
 	// role timelines
 	| `roleTimeline:${string}` // any notes are included

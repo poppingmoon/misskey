@@ -5,8 +5,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <PageWithHeader v-model:tab="tab" :actions="headerActions" :tabs="headerTabs" :swipable="true">
-	<div class="_spacer" style="--MI_SPACER-w: 700px;">
-		<div v-if="channel && tab === 'overview'" class="_gaps">
+	<div v-if="channel && tab === 'overview'" class="_gaps">
+		<div class="_spacer" style="--MI_SPACER-w: 700px;">
 			<div class="_panel" :class="$style.bannerContainer">
 				<XChannelFollowButton :channel="channel" :full="true" :class="$style.subscribe"/>
 				<MkButton v-if="favorited" v-tooltip="i18n.ts.unfavorite" asLike class="button" rounded primary :class="$style.favorite" @click="unfavorite()"><i class="ti ti-star"></i></MkButton>
@@ -32,7 +32,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 			</MkFoldableSection>
 		</div>
-		<div v-if="channel && tab === 'timeline'" class="_gaps">
+	</div>
+	<div v-if="channel && tab === 'timeline'" class="_gaps">
+		<div class="_spacer" style="--MI_SPACER-w: 700px;">
 			<MkInfo v-if="channel.isArchived" warn>{{ i18n.ts.thisChannelArchived }}</MkInfo>
 
 			<!-- スマホ・タブレットの場合、キーボードが表示されると投稿が見づらくなるので、デスクトップ場合のみ自動でフォーカスを当てる -->
@@ -40,10 +42,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 			<MkStreamingNotesTimeline :key="channelId" src="channel" :channel="channelId"/>
 		</div>
-		<div v-else-if="tab === 'featured'">
+	</div>
+	<div v-else-if="tab === 'featured'">
+		<div class="_spacer" style="--MI_SPACER-w: 700px;">
 			<MkNotesTimeline :paginator="featuredPaginator"/>
 		</div>
-		<div v-else-if="tab === 'search'">
+	</div>
+	<XFiles v-else-if="tab === 'files'" :channelId="channelId"/>
+	<div v-else-if="tab === 'search'">
+		<div class="_spacer" style="--MI_SPACER-w: 700px;">
 			<div v-if="notesSearchAvailable" class="_gaps">
 				<div>
 					<MkInput v-model="searchQuery" @enter="search()">
@@ -71,7 +78,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, watch, ref, markRaw, shallowRef } from 'vue';
+import { defineAsyncComponent, computed, watch, ref, markRaw, shallowRef } from 'vue';
 import * as Misskey from 'misskey-js';
 import { url } from '@@/js/config.js';
 import { useInterval } from '@@/js/use-interval.js';
@@ -99,6 +106,8 @@ import { notesSearchAvailable } from '@/utility/check-permissions.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { useRouter } from '@/router.js';
 import { Paginator } from '@/utility/paginator.js';
+
+const XFiles = defineAsyncComponent(() => import('./channel.files.vue'));
 
 const router = useRouter();
 
@@ -335,6 +344,10 @@ const headerTabs = computed(() => [{
 	key: 'featured',
 	title: i18n.ts.featured,
 	icon: 'ti ti-bolt',
+}, {
+	key: 'files',
+	title: i18n.ts.files,
+	icon: 'ti ti-photo',
 }, {
 	key: 'search',
 	title: i18n.ts.search,
